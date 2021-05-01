@@ -1,0 +1,2335 @@
+ <?php
+    include './library/configServer.php';
+    include './library/consulSQL.php';
+    include './process/securityPanel.php';
+   
+?>
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Manage | Store EWS</title>
+    <?php include './inc/link.php'; ?>
+    <script type="text/javascript" src="js/admin.js"></script>
+    <script src="js/push.min.js"></script>
+</head>
+<body id="container-page-configAdmin">
+  <style>
+  .valido:focus{
+    border-color: green;
+    color: green;   
+  }
+  .invalido:focus{
+    border-color: red;
+    color: red;   
+  }
+  </style>
+  <script language="javascript">
+//Funcion que actualiza la lista de proveedores:
+ $(document).ready(function(){
+$('#actualizarP').click(function(){
+ $.ajax({
+ url: 'inc/actualizarProv.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#select-proveedores').html(responsedata);
+ }
+
+ });
+
+});
+  });
+  function consultarProds(){
+     var atributo=document.getElementById("atributo").value;
+     var valor= document.getElementById("valorProd").value;
+     $.post("inc/tab-prods.php", { atributo: atributo, valor: valor }, function(data){
+     $("#body-prods").html(data);
+      });
+}
+//Metodo que visualiza la lista de productos añadidos al cerrar el modal agregar productos 
+//en el apartado de agregar productos por factura:
+$(document).ready(function(){
+$("#productosPopup").on("hidden.bs.modal", function () {
+   var validar="validar"; 
+   $.post("inc/mostrarListaProductos.php", { validar: validar }, function(data){
+   $("#tabProd").html(data);
+    });
+});
+}); 
+$(document).ready(function(){
+$("#consultaClientesPopup").on("hidden.bs.modal", function () {
+   var validar="validar"; 
+   $.post("inc/mostrarRFC.php", { validar: validar }, function(data){
+   $("#data-cliente").html(data);
+    });
+});
+});   
+
+//Funcion para modificar la cantidad de producto en la lista del apartado agregar productos por factura:
+
+function modificarCantidad(posicion,componente){
+var cantidad=componente.value;
+$.post("inc/modificarCantidad.php", { cantidad: cantidad, posicion: posicion }, function(data){
+   $("#data-cliente").html(data);
+    });
+}
+
+//Funcion que actualiza la lista de proveedores en agregar productos por factura:
+function actualizarProveedores(){
+
+ $.ajax({
+ url: 'inc/actualizarProvee.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#select-rfc-proveedor').html(responsedata);
+ }
+
+ });
+
+}
+
+ //Funcion que actualiza la lista de proveedores:
+ $(document).ready(function(){
+$('#actualizarP').click(function(){
+ $.ajax({
+ url: 'inc/actualizarProv.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#select-proveedores').html(responsedata);
+ }
+
+ });
+
+});
+  });
+
+   
+ //Funcion que actualiza la lista de proveedores:
+ $(document).ready(function(){
+$('#actualizarCat').click(function(){
+ $.ajax({
+ url: 'inc/actualizarCat.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#select-categoria').html(responsedata);
+ }
+
+ });
+
+});
+  });
+
+//Funcion que actualiza la lista de lineas:
+$(document).ready(function(){
+$('#actualizarL').click(function(){
+ $.ajax({
+ url: 'inc/actualizarL.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#select-linea').html(responsedata);
+ }
+
+ });
+
+});
+  });  
+
+ //Funcion que actualiza la lista de notas en select de panel Productos por Factura
+function actualizarNotas(){
+ $.ajax({
+ url: 'inc/actualizarNotas.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#notaCp').html(responsedata);
+ }
+
+ });
+}
+//funcion que actualiza facturas en select de panel Productos por Factura
+function actualizarFacturas(){
+ $.ajax({
+ url: 'inc/actualizarFacturas.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#facturaCp').html(responsedata);
+ }
+
+ });
+}
+//funcion que actualiza productos en select de panel Productos por Factura
+function actualizarProductos(){
+ $.ajax({
+ url: 'inc/actualizarProds.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#prod-cp').html(responsedata);
+ }
+
+ });
+}
+
+//Evento del boton detalles
+
+$(document).ready(function(){
+$('#editarClientePopup').on('show.bs.modal', function (event) {
+var button = $(event.relatedTarget) // Button that triggered the modal
+var recipient = button.data('whatever') // Extract info from data-* attributes
+  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+ // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+ var modal = $(this)
+ $.post("inc/modalEditarClientes.php", { recipient: recipient }, function(data){
+ $("#contenidoModalClientes").html(data);
+ });
+})
+});
+	  
+//Evento del boton editar productos
+
+$(document).ready(function(){
+$('#editarProd').on('show.bs.modal', function (event){
+var button = $(event.relatedTarget) // Button that triggered the modal
+var recipient = button.data('whatever') // Extract info from data-* attributes
+  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+ // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+ var modal = $(this)
+ $.post("inc/modalEditarProducto.php", { recipient: recipient }, function(data){
+ $("#contenidoEditarProd").html(data);
+ });
+})
+});	  
+
+ function addProductos(){
+ var id_producto=document.getElementById('prod-cp').value;
+ $.post("inc/listaProductos.php", { id_producto: id_producto }, function(data){
+              $("#tabProd").html(data);
+            }); 
+ 
+ }
+
+
+/*Envio del formulario con Ajax para añadir cliente*/
+  $(document).ready(function(){
+   $('#clientePopup form').submit(function(e) {
+         e.preventDefault();
+         var informacion=$('#clientePopup form').serialize();
+         var metodo=$('#clientePopup form').attr('method');
+         var peticion=$('#clientePopup form').attr('action');
+         $.ajax({
+            type: metodo,
+            url: peticion,
+            data:informacion,
+            beforeSend: function(){
+                $("#addCliente").html('Agregando cliente <br><img src="assets/img/enviando.gif" class="center-all-contens">');
+            },
+            error: function() {
+                $("#addCliente").html("Ha ocurrido un error en el sistema");
+            },
+            success: function (data) {
+
+                $("#addCliente").html(data);
+            }
+        });
+        return false;
+    });
+
+   });
+
+
+//Evento de formulario de modal productos:  
+
+$(document).ready(function(){
+   $('#productosPopup form').submit(function(e) {
+         e.preventDefault();
+         
+         var type=$('#productosPopup form').attr('method');
+         var url=$('#productosPopup form').attr('action');
+        
+        /* Para que PHP reciba todos los archivos hay que definir
+             el <input> con corchetes, de modo que aquí tenemos que
+             indicarlo igual */
+        if (this['imgM'].files.length) {
+            var data = new FormData(this);
+            /* En este caso sí que hay que cambiar estos parámetros,
+                 en particular contentType=false provoca una cabecera HTTP
+                 'multipart/form-data; boundary=----...' */
+            contentType = false;
+            processData = false;
+        } else {
+            var data = $(this).serialize();
+        }
+        $.ajax({
+            url: url,
+            data: data,
+            type: type,
+            contentType: contentType,
+            processData: processData
+        }).done(function(data) {
+            $("#addProducto").html(data);
+        });
+        return false;
+    });
+
+   });
+
+ function mayus(id){
+
+  id.value=id.value.toUpperCase();  
+  
+  }
+
+
+
+//Funcion que actualiza la lista de marcas:  
+ 
+$(document).ready(function(){
+$('#actualizarM').click(function(){
+ $.ajax({
+ url: 'inc/actualizarMarca.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#select-marcas').html(responsedata);
+ }
+
+ });
+
+});
+  });
+ 
+//Funcion que actualiza la lista de marcas:  
+ 
+function consultaNombreProve(componente){
+var valor=componente.value;
+ $.post("inc/consultarProveedor.php", { valor: valor }, function(data){
+        $("#nombreProvee").html(data);
+        });
+        $.post("inc/consultarFacturas.php", { valor: valor }, function(data){
+        $("#select-facturas").html(data);
+        });       
+}
+
+
+//Funcion que actualiza la lista de carros:
+ 
+$(document).ready(function(){
+$('#actualizarC').click(function(){
+ $.ajax({
+ url: 'inc/actualizarCarro.php',
+ type: 'post',
+
+ success:function(responsedata){
+  $('#select-carros').html(responsedata);
+ }
+
+ });
+
+});
+  });
+
+//Funcion que actualiza el select actualizar-modelos:
+
+ $(document).ready(function(){
+        $("#actualizar-linea").change(function () {
+                              
+          $("#actualizar-linea option:selected").each(function () {
+            nombre_linea = $(this).val();
+            $.post("inc/modelos.php", { nombre_linea: nombre_linea }, function(data){
+              $("#actualizar-modelo").html(data);
+            });            
+          });
+
+        })
+      });
+
+ //funcion que actualiza la tabla Actualizar Modelos
+
+$(document).ready(function(){
+$('#actualizar-buscar').click(function(){
+
+  var actualizarLinea = document.getElementById("actualizar-linea").value;
+  var actualizarModelo = document.getElementById("actualizar-modelo").value;
+  var actualizarAnio = document.getElementById("actualizar-anio").value;
+  var actualizarAnio2 = document.getElementById("actualizar-anio2").value;
+  var where="";
+
+  if (actualizarAnio2==0 && actualizarAnio!=0) {
+
+  where="WHERE nombreLinea='"+actualizarLinea+"' AND nombreModelo='"+actualizarModelo+"' AND ano="+actualizarAnio;
+
+}else if(actualizarAnio==0 && actualizarAnio2==0){
+
+where="WHERE nombreLinea='"+actualizarLinea+"' AND nombreModelo='"+actualizarModelo+"'";
+
+}else{
+
+  where="WHERE nombreLinea='"+actualizarLinea+"' AND nombreModelo='"+actualizarModelo+"' AND ano>="+actualizarAnio+" AND ano<="+actualizarAnio2;
+  }
+   $.post("inc/tab-carros.php", { where: where }, function(data){
+     $("#body-actualizar").html(data);
+      });
+
+  });
+});
+
+
+$(document).ready(function(){
+ $("#tipo-compra").change(function () {
+ var tipoCompra=$(this).val();
+  $.post("inc/tipoCompra.php", { tipoCompra: tipoCompra }, function(data){
+     $("#tipoCompra").html(data);
+      });
+})
+});
+
+function eliminarCarro(posicion){
+
+$.post("inc/tablaModelosP.php", { posicion: posicion }, function(data){
+$("#listaModelos").html(data);
+});
+ }
+//lista de carros al eliminar modelos en modal añadir productos
+function eliminarCarroM(posicion){
+
+$.post("inc/tablaModelosM.php", { posicion: posicion }, function(data){
+$("#listaModelosM").html(data);
+});
+ } 
+//lista de carros al eliminar modelos en modal editar productos
+function eliminarCarroP(posicion){
+
+$.post("inc/tablaModelosP.php", { posicion: posicion }, function(data){
+$("#listaModelosP").html(data);
+});
+ } 
+
+function eliminarEquivalencia(idProd){
+  
+ $.post("inc/tablaAplicaciones.php", { idProd: idProd }, function(data){
+ $("#listaAplicaciones").html(data);
+ });
+ }
+
+function idCliente(valor){
+var nombreCliente=valor.value;
+   $.post("inc/mostrarClientes.php", { nombreCliente: nombreCliente }, function(data){
+              $("#rfc-cp").html(data);
+            }); 
+}
+
+// añadir nota:
+
+function addNota(){
+var folioNota=document.getElementById('folioNota').value;  
+$.post("process/addNota.php", { folioNota: folioNota }, function(data){
+ $("#addNota").html(data);
+  }); 
+}
+//Añadir Linea de carro:
+function addLinea(){
+var folioNota=document.getElementById('nombreL').value;  
+$.post("process/addLinea.php", { folioNota: folioNota }, function(data){
+ $("#addLinea").html(data);
+  }); 
+}
+// añadir factura:
+
+function addFactura(){
+var numeroFactura=document.getElementById('numeroFactura').value; 
+var fechaFactura=document.getElementById('fechaFactura').value;
+$.post("process/addFactura.php", { numeroFactura: numeroFactura, fechaFactura: fechaFactura}, function(data){
+ $("#addFactura").html(data);
+  }); 
+}
+
+//Funcion que actualiza el select actualizar-sucursales desde select tipo de sucursal:
+
+ $(document).ready(function(){
+        $("#select-tipo-sucursal").change(function () {
+                              
+          $("#select-tipo-sucursal option:selected").each(function () {
+            var idTipoSucursal= $(this).val();
+            var idUbicacion=document.getElementById('select-ubicacion').value;
+           $.post("inc/selectSucursales.php", { idUbicacion: idUbicacion, idTipoSucursal: idTipoSucursal }, function(data){
+           $("#select-sucursales").html(data);
+           });            
+           
+          });
+
+        })
+      });
+
+//Funcion que actualiza el select actualizar-sucursales desde select ubicacion:
+
+ $(document).ready(function(){
+        $("#select-ubicacion").change(function () {
+                              
+          $("#select-ubicacion option:selected").each(function () {
+            var idTipoSucursal=document.getElementById('select-tipo-sucursal').value; 
+            var idUbicacion=$(this).val();
+            $.post("inc/selectSucursales.php", { idUbicacion: idUbicacion, idTipoSucursal: idTipoSucursal }, function(data){
+           $("#select-sucursales").html(data);
+           });            
+           
+          });
+
+        })
+      });
+
+function dateSelect(componente){
+var valor=componente.value;
+$.post("inc/dataSelect.php", { valor: valor}, function(data){
+ $("#date-select").html(data);
+  }); 
+}
+</script>
+
+    <?php include './inc/navbar.php';
+     include './process/notificacion.php';
+     session_start();
+     unset($_SESSION['contador3']);
+	unset($_SESSION['cantidad3']);
+	
+	 unset($_SESSION['contadorEquivalencias']);
+     unset($_SESSION['idEquivalencia']);
+     unset($_SESSION['listaEquivalencias']);
+     unset($_SESSION['contadorNombres']);
+     unset($_SESSION['nombreModelo']);
+     unset($_SESSION['contadorCarros']);
+     unset($_SESSION['listaModelos']);
+     unset($_SESSION['listaProd']);
+     $_SESSION['idEquivalencia']=0;
+     $_SESSION['idProveedor']=0;
+     if(!isset($_SESSION['contador3'])){
+     $_SESSION['contador3']=0;
+     }
+    if(!isset($_SESSION['contadorEquivalencias'])){
+     $_SESSION['contadorEquivalencias']=0;
+     }
+     if(!isset($_SESSION['idEquivalencia'])){
+        $_SESSION['idEquivalencia']=0;
+        } 
+    if(!isset($_SESSION['contadorCarros'])){
+     $_SESSION['contadorCarros']=0;
+     }
+     if(!isset($_SESSION['contadorCarrosP'])){
+        $_SESSION['contadorCarrosP']=0;
+        }
+     if(!isset($_SESSION['contadorNombres'])){
+     $_SESSION['contadorNombres']=0;
+     }
+     if(!isset($_SESSION['contadorNombresP'])){
+        $_SESSION['contadorNombresP']=0;
+        }
+     $SESSION['idEquivalencia']=0;
+     ?>
+
+     <script type="text/javascript">
+      
+      var existencias = '<?php echo $existenciasBajas;?>';
+
+  if(existencias=="si"){
+  
+  Push.create("Favor de revisar existencias",{
+
+  body: "Algunos de sus productos tienen menos de 6 piezas",
+  icon: "assets/img/LOGOSA.png",
+  timeout: 150000 
+  });   
+
+  } 
+
+  function eliminarElemento(idProducto){
+  
+ $.post("inc/dellista.php", { idProducto: idProducto }, function(data){
+ $("#tabProd").html(data);
+ });
+ }
+
+//Boton añadir modelos  
+  
+$(document).ready(function(){
+$('#anadir-modelos').click(function(){
+var nombreModelo=document.getElementById('select-carros').value;
+var anio=document.getElementById('select-ano').value;
+var anio2=document.getElementById('select-ano2').value;
+$.post("inc/listaModelos.php", { nombreModelo: nombreModelo, anio: anio, anio2: anio2 }, function(data){
+$("#listaModelos").html(data);
+});
+});
+  });
+
+//Boton añadir modelos en boton añadir productos 
+  
+function anadirModelos(){
+var nombreModelo=document.getElementById('select-carrosP').value;
+var anio=document.getElementById('select-anoP').value;
+var anio2=document.getElementById('select-ano2P').value;
+$.post("inc/listaModelosP.php", { nombreModelo: nombreModelo, anio: anio, anio2: anio2 }, function(data){
+$("#listaModelosP").html(data);
+});
+}
+//Boton añadir modelos  en modal
+  
+$(document).ready(function(){
+$('#anadir-modelosM').click(function(){
+var nombreModelo=document.getElementById('select-carrosM').value;
+var anio=document.getElementById('select-anoM').value;
+var anio2=document.getElementById('select-ano2M').value;
+$.post("inc/listaModelosM.php", { nombreModelo: nombreModelo, anio: anio, anio2: anio2 }, function(data){
+$("#listaModelosM").html(data);
+});
+});
+  });
+
+//Boton añadir equivalencias:
+
+$(document).ready(function(){
+$('#anadir-equivalencia').click(function(){
+var idProd=document.getElementById('select-equivalencias').value;
+$.post("inc/listaAplicaciones.php", { idProd: idProd }, function(data){
+$("#equivalencias").html(data);
+});
+});
+  });
+
+//Boton añadir equivalencias en modal editar productos:
+
+function anadirEquivalencia(){
+var idProd=document.getElementById('select-equivalenciasP').value;
+$.post("inc/listaAplicaciones.php", { idProd: idProd }, function(data){
+$("#equivalenciasP").html(data);
+});
+}
+
+//Boton añadir equivalencias:
+
+$(document).ready(function(){
+$('#anadir-equivalenciaM').click(function(){
+var idProd=document.getElementById('select-equivalenciasM').value;
+$.post("inc/listaAplicaciones.php", { idProd: idProd }, function(data){
+$("#equivalenciasM").html(data);
+});
+});
+  });  
+
+//Metodo para verificar codigo de producto:
+
+function verificarCodigoProducto(componente){
+var codProd=componente.value;
+$.post("inc/verificarProd.php", { codProd: codProd }, function(data){
+$("#verCodProd").html(data);
+});
+}
+//Metodo para verificar codigo de producto en modal:
+function verificarCodigoProductoM(componente){
+var codProd=componente.value;
+$.post("inc/verificarProdM.php", { codProd: codProd }, function(data){
+$("#verCodProdM").html(data);
+});
+}
+$(document).ready(function(){
+$('#buscarProds').click(function(){
+
+  var atributo=document.getElementById("atributo").value;
+  var valor= document.getElementById("valorProd").value;
+  $.post("inc/tab-prods.php", { atributo: atributo, valor: valor }, function(data){
+     $("#body-prods").html(data);
+      });
+
+  });
+});
+     </script>
+    <section id="prove-product-cat-config">
+        <div class="container">
+            <div class="page-header">
+              <h1>Panel de administración <small class="tittles-pages-logo">Store EWS
+				</small></h1>
+            </div>
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+              <li role="presentation" class="active"><a href="#Productos" role="tab" data-toggle="tab">Productos</a></li>
+              <li role="presentation"><a href="#Proveedores" role="tab" data-toggle="tab">Proveedores</a></li>
+              <li role="presentation"><a href="#Categorias" role="tab" data-toggle="tab">Marcas</a></li>
+              <li role="presentation"><a href="#Pedidos" role="tab" data-toggle="tab">Productos por Factura</a></li>
+              <li role="presentation"><a href="#Admins" role="tab" data-toggle="tab">Usuarios</a></li>
+              <li role="presentation"><a href="#Clientes" role="tab" data-toggle="tab">Clientes</a></li>
+              <?php
+              if($_SESSION['acceso']==1){
+              echo '<li role="presentation"><a href="#Sucursales" role="tab" data-toggle="tab">Sucursales</a></li>
+              <li role="presentation"><a href="#Ubicaciones" role="tab" data-toggle="tab">Ubicaciones</a></li>
+              <li role="presentation"><a href="#Ajustes" role="tab" data-toggle="tab">Ajustes</a></li>';
+             
+              }else if($_SESSION['acceso']==2){
+			   echo '<li role="presentation"><a href="#Ajustes" role="tab" data-toggle="tab">Ajustes</a></li>';
+			  }else{
+			  }
+              ?>
+            </ul>
+            <div class="tab-content">
+                <!--==============================Panel productos===============================-->
+                <div role="tabpanel" class="tab-pane fade in active" id="Productos">
+                <div class="row">
+                    <div class="col-xs-12 col-sm-6">
+                        <br><br>
+                        <div id="add-product">
+                            <h2 class="text-primary text-center"><small><i class="fa fa-plus"></i></small>&nbsp;&nbsp;Agregar un producto nuevo</h2>
+                            <form role="form" action="process/regproduct.php" method="post" enctype="multipart/form-data">
+                             <?php 
+								if($_SESSION['acceso']==1){  
+								?>
+								<br>
+								 <div class="form-group">
+								 <label>Sucursal de producto:</label>
+									 <select name="sucursal-prod" id="sucursalProd" class="form-control">
+									 <?php
+									  $proveedoresc=mysqli_query($con,"SELECT * FROM sucursal inner join ubicacion on sucursal.idUbicacion=ubicacion.idUbicacion where idSucursal=".$_SESSION['sucursal']);
+                                      while($provc=mysqli_fetch_array($proveedoresc)){
+                                      echo '<option value="'.$provc['idSucursal'].'">'.$provc['idSucursal']."-".$provc['nombreSucursal']."-".$provc['nombreUbicacion'].'</option>';
+                                        }
+									$proveedoresc=mysqli_query($con,"SELECT * FROM sucursal inner join ubicacion on sucursal.idUbicacion=ubicacion.idUbicacion where idSucursal!=".$_SESSION['sucursal']);
+                                      while($provc=mysqli_fetch_array($proveedoresc)){
+                                      echo '<option value="'.$provc['idSucursal'].'">'.$provc['idSucursal']."-".$provc['nombreSucursal']."-".$provc['nombreUbicacion'].'</option>';
+                                        }
+								      ?>
+									 </select>
+                              </div> 
+								<?php
+								}
+								?>    
+							<div class="form-group">
+								 <label>Código de producto</label>
+                                <input type="text" class="form-control"  placeholder="Código" required  name="prod-codigo" id="codProds" onkeyup="verificarCodigoProducto(this);">
+                              </div>
+                              <div id="verCodProd"></div>
+                              <div class="form-group">
+                                <label>Nombre de producto</label>
+                                <input type="text" class="form-control"  placeholder="Nombre" required  name="prod-name">
+                              </div>
+                               
+                              <div class="form-group">
+                                <label>Codigo de SAT:</label>
+                                <input type="text" class="form-control"  placeholder="Codigo de SAT" required name="prod-sat">
+                              </div>
+                              <div class="form-group">
+                                <label>Descripción de producto</label>
+                                <textarea class="form-control"  placeholder="Descripción" required name="prod-des" rows="10" cols="40"></textarea>
+                              </div>
+                              <div class="form-group">
+                                <label>Proveedor</label>
+                                <select class="form-control" name="prod-prov" id="select-proveedores">
+                                    <?php 
+                                        $proveedoresc=mysqli_query($con,"SELECT * FROM proveedor order by NombreProveedor asc");
+                                        while($provc=mysqli_fetch_array($proveedoresc)){
+                                            echo '<option value="'.$provc['idProveedor'].'">'.$provc['NombreProveedor'].'</option>';
+                                        }
+                                    ?>
+                                </select>
+                              </div>
+
+                              <div class="form-group">                                 
+                                 &nbsp<input type="button" value="Añadir Nuevo Proveedor" data-toggle="modal" data-target="#proveedorPopup" >
+                                 
+                                 &nbsp &nbsp<input type="button" value="Actualizar" id="actualizarP">
+                                 </div>
+
+                              <div class="form-group">
+                                <label>Marca del producto</label>
+                                <select class="form-control" name="prod-marca" id="select-marcas">
+                                
+                                    <?php 
+                                        $categoriac=mysqli_query($con,"SELECT * FROM marca order by NombreMarca asc");
+                                        while($catec=mysqli_fetch_array($categoriac)){
+                                            echo '<option value="'.$catec['idMarca'].'">'.$catec['NombreMarca'].'</option>';
+                                        }
+                                    ?>
+                                </select>
+                              </div>
+
+                               <div class="form-group">
+                                 
+                                 &nbsp<input type="button" value="Añadir Nueva Marca" data-toggle="modal" data-target="#marcaPopup">
+                                 &nbsp &nbsp <input type="button" value="Actualizar" id="actualizarM">
+
+                               </div>
+                            
+                               
+                               <div class="form-group">
+                                <label>Precio Compra</label>
+                                <input type="text" class="form-control"  name="prod-price" placeholder="Precio de Compra" required maxlength="20">                                
+                              </div>
+                              <div class="form-group">
+                                <label>Precio Venta</label>
+                                <input type="text" class="form-control"  name="prodv-price" placeholder="Precio de Venta" required maxlength="20">                                
+                              </div>
+                              <div class="form-group">
+                              <input type="checkbox" name="iva-prod" value="iva">&nbsp;&nbsp;Aplicar IVA
+                              </div>
+                              <div class="form-group">
+                                <label>Unidades disponibles</label>
+                                <input type="text" class="form-control"  placeholder="Unidades" required maxlength="20" pattern="[0-9]{1,20}" name="prod-stock">
+                              </div>
+                              
+                              <div class="form-group">
+                                <label>Imagen de producto</label>
+                                <input type="file" name="img">
+                                <p class="help-block">Formato de imagenes admitido png, jpg, gif, jpeg</p>
+                              </div>
+                                <input type="hidden"  name="admin-name" value="<?php echo $_SESSION['nombreUser'] ?>">
+                              <p class="text-center"><button type="submit" class="btn btn-primary">Agregar a la tienda</button></p>
+                              <div id="res-form-add" style="width: 100%; text-align: center; margin: 0;"></div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-6">
+                        <br><br>
+                        <div id="del-prod-form">
+                            <h2 class="text-danger text-center"><small><i class="fa fa-trash-o"></i></small>&nbsp;&nbsp;Eliminar un producto</h2>
+                             <form action="process/delprod.php" method="post" role="form">
+                                 <div class="form-group">
+                                     <label>Productos</label>
+                                     <select class="form-control" name="prod-code">
+                                         <?php 
+	                    					if($_SESSION['acceso']!=1){
+											$condicion="WHERE idSucursal=".$_SESSION['sucursal'];	
+											}else{
+											$condicion="";
+											}
+                                             $productoc=mysqli_query($con,"SELECT * FROM producto $condicion order by nombreProd asc");
+									         $numProdDel=mysqli_num_rows($productoc);
+									        if($numProdDel>0){
+                                             while($prodc=mysqli_fetch_array($productoc)){
+                                                 echo '<option value="'.$prodc['idProd'].'">'.$prodc['nombreProd'].'</option>';
+                                             }
+											}else{
+											 echo '<option value="0">No se encontraron productos</option>';
+											}	
+                                         ?>
+                                     </select>
+                                 </div>
+                                 <p class="text-center"><button type="submit" class="btn btn-danger">Eliminar</button></p>
+                                 <br>
+                                 <div id="res-form-del-prod" style="width: 100%; text-align: center; margin: 0;"></div>
+                             </form>
+                         </div>
+                    </div>
+                    <div class="col-xs-12">
+                        <br><br>
+                        <div class="panel panel-info">
+                            <div class="panel-heading text-center"><i class="fa fa-refresh fa-2x"></i><h3>Actualizar datos de producto</h3>
+                            <div class="panel-heading">
+                                  <!-- Filtro de la tabla Actualizar Modelos -->
+
+                                <label>Buscar por:</label>&nbsp;&nbsp;
+                                <div style="display:inline-block;width:20%;"><select name="actualizar-linea" class="form-control" id="atributo"> <!--Desplegable del atributo -->
+  <option value="desProd">Descripcion:</option> 
+  <option value="codProd">Codigo de producto:</option>
+  <option value="codigoSat">Codigo del SAT:</option>      
+  <option value="nombreProd">Nombre de producto:</option>
+  <option value="NombreMarca">Marca:</option>
+  <option value="NombreProveedor">Proveedor:</option>
+
+</select>
+</div>&nbsp;&nbsp;&nbsp;
+<div style="display:inline-block;width:20%;">
+<input type="text" id="valorProd" class="form-control" onkeyup="consultarProds();"></div>
+&nbsp;&nbsp;&nbsp;
+
+
+
+                                </div>
+                            </div>
+                                                       
+                            
+                          <div class="table-responsive">
+
+                              <table class="table table-bordered">
+                                  <thead class="">
+                                      <tr>
+                                          <th class="text-center">ID</th>
+                                          <th class="text-center">Código</th>
+                                          <th class="text-center">Nombre</th>
+                                          <th class="text-center">Marca Producto</th>
+                                          <th class="text-center">Proveedor</th>
+                                          <th class="text-center">Precio Costo</th>
+                                          <th class="text-center">Existencia</th>
+                                          <th class="text-center">Opciones</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody id="body-prods">
+                                     
+                                  </tbody>
+                              </table>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+				<!-- Modal editar producto -->
+
+                              
+                               <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="editarProd">
+                               <div class="modal-dialog modal-md">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Editar Producto</h4>
+                                </div>
+                              
+                 
+                  <div class="popup" id="contenidoEditarProd">
+                  
+                  </div>                
+                  <div class="modal-footer">
+                   
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addProveedor"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal Proveedores -->
+    <!-- Modal añadir linea -->
+
+                              
+                              <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="lineaPopup">
+                               <div class="modal-dialog modal-md">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Nueva Linea</h4>
+                                </div>
+                                                 
+                  <div style="padding:3%;">
+                  <div class="form-group">
+                  <label>Nombre de linea:</label>
+                  <input type="text" placeholder="Nombre Linea" class="form-control" id="nombreL">
+                  </div>
+                  </div>                
+                  <div class="modal-footer">
+                   <div class="text-center">
+                   <button onclick="addLinea();" class="btn btn-primary btn-sm">Agregar linea</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                   </div>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addLinea"></div>
+            
+          </div>
+      </div>
+    </div> <!-- Fin modal Proveedores -->
+                 <!-- Modal agregar nuevo Proveedor -->
+
+                              
+                               <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="proveedorPopup">
+                               <div class="modal-dialog modal-sm">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Agregar Nuevo Proveedor</h4>
+                                </div>
+                              <form action="process/addProveedor.php" method="post" role="form" style="margin: 20px;"  id="faddProveedor">
+                 
+                  <div class="popup">
+                  <div class="form-group">
+                                    <label>Nombre</label>
+                                    <input class="form-control" type="text" name="name-proveedor" placeholder="Nombre proveedor"  required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>RFC</label>
+                                    <input class="form-control" type="text" name="rfc-proveedor" placeholder="RFC proveedor" required="">
+                                </div>                                
+                                <div class="form-group">
+                                    <label>Dirección</label>
+                                    <input class="form-control" type="text" name="dir-proveedor" placeholder="Dirección proveedor" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Correo</label>
+                                    <input class="form-control" type="text" name="correo-proveedor" placeholder="Correo Electrónico" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input class="form-control" type="number" name="tel-proveedor" placeholder="Número telefónico" pattern="[0-9]{1,20}" maxlength="20" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Página web</label>
+                                    <input class="form-control" type="text" name="web-proveedor" placeholder="Página web proveedor" required="">
+                                </div>
+                  </div>                
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">Agregar Proveedor</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addProveedor"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal Proveedores -->
+ <!-- Modal agregar nueva nota -->
+
+                              
+                               <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="notaPopup">
+                               <div class="modal-dialog modal-sm">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Agregar nueva nota</h4>
+                                </div>
+                              <form action="process/addNota.php" method="post" role="form" style="margin: 20px;"  id="faddNota">
+                 
+                  <div class="popup">
+                  <div class="form-group">
+                  <label>Folio de nota:</label>
+                  <input class="form-control" type="text" id="folioNota">
+                  </div>
+                  </div>             
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm" onclick="addNota();">Agregar Nota</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addNota"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal notas -->	
+     <!-- Modal agregar nueva factura -->
+
+                              
+                              <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="facturaPopup">
+                               <div class="modal-dialog modal-sm">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Agregar nueva factura</h4>
+                                </div>
+                              <form action="process/addfactura.php" method="post" role="form" style="margin: 20px;"  id="faddfactura">
+                 
+                  <div class="popup">
+                  <div class="form-group">
+                                    <label>Numero de Factura:</label>
+                                    <input class="form-control" type="text" id="numeroFactura" name="folio-factura" placeholder="Numero Factura"  required="">
+                                </div>
+                                <div class="form-group">
+                                <label>Fecha de emisión:</label>
+                                    <input class="form-control" type="date" id="fechaFactura" name="folio-nota" placeholder="Folio Nota"  required="">                                      
+                  </div> 
+			  	  
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm" onclick="addFactura();">Agregar factura</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addFactura"></div>
+								  </div>
+					  </form>
+								  
+          </div>
+      </div>
+    </div> <!-- Fin modal Proveedores -->				
+    <!-- Modal consultar productos -->
+
+                              
+                               <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="conProductosPopup">
+                               <div class="modal-dialog modal-sm">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Consultar productos</h4>
+                                </div>
+                              <form action="process/addProveedor.php" method="post" role="form" style="margin: 20px;"  id="faddProveedor">
+                 
+                  <div class="popup">
+                  <div class="form-group">
+                                    <label>Nombre</label>
+                                    <input class="form-control" type="text" name="name-proveedor" placeholder="Nombre proveedor"  required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>RFC</label>
+                                    <input class="form-control" type="text" name="rfc-proveedor" placeholder="RFC proveedor" required="">
+                                </div>                                
+                                <div class="form-group">
+                                    <label>Dirección</label>
+                                    <input class="form-control" type="text" name="dir-proveedor" placeholder="Dirección proveedor" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Correo</label>
+                                    <input class="form-control" type="text" name="correo-proveedor" placeholder="Correo Electrónico" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input class="form-control" type="number" name="tel-proveedor" placeholder="Número telefónico" pattern="[0-9]{1,20}" maxlength="20" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Página web</label>
+                                    <input class="form-control" type="text" name="web-proveedor" placeholder="Página web proveedor" required="">
+                                </div>
+                  </div>                
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">Agregar Proveedor</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addProveedor"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal Proveedores -->
+    <!-- Modal agregar nueva categoria -->
+
+                              
+                               <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="categoriaPopup">
+                               <div class="modal-dialog modal-sm">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Agregar nueva categoria</h4>
+                                </div>
+                              <form action="process/addCategoria.php" method="post" role="form" style="margin: 20px;"  id="faddCategoria">
+                 
+                  
+                                 <div class="form-group">
+                                    <label>Nombre</label>
+                                    <input class="form-control" type="text" name="name-categoria" placeholder="Nombre categoria"  required="">
+                                </div>
+                               
+                                 
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">Agregar Categoria</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addCategoria"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal Agregar Categoria -->
+
+     <!-- Modal agregar nueva equivalencia -->
+                             
+                                    <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="equivalenciaPopup">
+                                    <div class="modal-dialog modal-sm">
+                                    <div class="modal-content" id="modal-form-login">
+                                    <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                                    <h4 class="modal-title text-center text-primary" id="myModalLabel">Agregar nueva equivalencia</h4>
+                                        </div>
+                                    <form action="process/addEquivalencia.php" method="post" role="form" style="margin: 20px;"  id="faddEquivalencia">
+                        
+                        
+                                        <div class="form-group">
+                                            <label>Nombre</label>
+                                            <input class="form-control" type="text" name="name-equivalencia" placeholder="Nombre Equivalencia"  required="">
+                                        </div>
+                               
+                                 
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">Agregar Equivalencia</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addEquivalencia"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal Agregar nueva equivalencia -->
+
+     <!-- Modal agregar nueva Marca -->
+
+                              
+                               <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="marcaPopup">
+                               <div class="modal-dialog modal-sm">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Agregar Nueva Marca</h4>
+                                </div>
+                              <form action="process/addMarca.php" method="post" role="form" style="margin: 20px;"  id="faddMarca">
+                 
+                  <div class="popup">
+                  <div class="form-group">
+                                        <label>Código</label>
+                                        <input class="form-control" type="text" name="marca-codigo" placeholder="Código de Marca" maxlength="9" required="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nombre</label>
+                                        <input class="form-control" type="text" name="marca-nombre" placeholder="Nombre de Marca" maxlength="30" required="">
+                                    </div>
+                  </div>                
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">Agregar Marca</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addMarca"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal marcas -->
+
+     <!-- Modal emergente para agregar un carro -->
+                              
+                               <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="carroPopup">
+                               <div class="modal-dialog modal-sm">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Agregar Nuevo Carro</h4>
+                                </div>
+                              <form action="process/addCarro.php" method="post" role="form" style="margin: 20px;"  data-form="login" 
+                              id="faddCarro">
+                 
+                  <div class="popup">
+                   <div class="form-group">
+                       <label>Modelo del Carro:</label><br>
+                       <input type="text" class="form-control" placeholder="Modelo del Carro" class="FormCatElec" name="carro-modelo">
+                  </div>  
+                  <div class="form-group">
+                      <label>Linea del Carro:</label><br>
+                                    <select class="form-control" id="linea-carro" name="linea-carro">
+                                       <?php 
+                                            $proveNIT=mysqli_query($con,"SELECT * FROM lineaCarros where idLinea!=17 order by nombreLinea asc");
+                                            while($PN=mysqli_fetch_array($proveNIT)){
+                                                echo '<option value="'.$PN['idLinea'].'">'.$PN['idLinea'].' - '.$PN['nombreLinea'].'</option>';
+                                            }
+                                        ?>
+                                    </select>
+                  </div>
+                  <div class="form-group">
+                                <label>Cilindrada:</label>
+                                <input class="form-control" type="text" name="des-carro" placeholder="Descripcion de modelo" maxlength="30" required="">
+                                </div>
+                  <div class="form-group">
+                    
+                  <label>Año:</label>
+                                    <select class="form-control" id="anio-carro" name="anio-carro">
+                                      <option value="0">De año:</option>
+                                       <?php 
+                                            $proveNIT=mysqli_query($con,"SELECT * FROM anoCarros where idAno!=41");
+                                            while($PN=mysqli_fetch_array($proveNIT)){
+                                                echo '<option value="'.$PN['idAno'].'">'.$PN['ano'].'</option>';
+                                            }
+                                        ?>
+                                    </select>                                                                                              
+
+                  </div> 
+                    <div class="form-group">
+                    
+                                   
+                                    <select class="form-control" id="anio-carro2" name="anio-carro2">
+                                       <option value="0">A año:</option>
+                                       <?php 
+                                            $proveNIT=mysqli_query($con,"SELECT * FROM anoCarros where idAno!=41");
+                                            while($PN=mysqli_fetch_array($proveNIT)){
+                                                echo '<option value="'.$PN['idAno'].'">'.$PN['ano'].'</option>';
+                                            }
+                                        ?>
+                                    </select>                                                                                              
+
+                  </div>  
+                  </div>                
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">Agregar Carro</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addCarro"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal Carros -->
+    
+
+                <!--==============================Panel Proveedores===============================-->
+                <div role="tabpanel" class="tab-pane fade" id="Proveedores">
+                    <div class="row">
+                    <div class="col-xs-12 col-sm-6">
+                        <br><br>
+                        <div id="add-provee">
+                            <h2 class="text-primary text-center"><small><i class="fa fa-plus"></i></small>&nbsp;&nbsp;Agregar un proveedor</h2>
+                            <form action="process/regprove.php" method="post" role="form">
+
+                                <div class="form-group">
+                                    <label>Nombre</label>
+                                    <input class="form-control" type="text" name="prove-name" placeholder="Nombre proveedor" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>RFC</label>
+                                    <input class="form-control" type="text" name="prove-rfc" placeholder="RFC proveedor" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Dirección</label>
+                                    <input class="form-control" type="text" name="prove-dir" placeholder="Dirección proveedor" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Correo</label>
+                                    <input class="form-control" type="text" name="prove-correo" placeholder="Correo Electrónico"  maxlength="50" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input class="form-control" type="number" name="prove-tel" placeholder="Número telefónico" pattern="[0-9]{1,20}" maxlength="20" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Página web</label>
+                                    <input class="form-control" type="text" name="prove-web" placeholder="Página web proveedor" required="">
+                                </div>
+                                <p class="text-center"><button type="submit" class="btn btn-primary">Añadir proveedor</button></p>
+                                <br>
+                                <div id="res-form-add-prove" style="width: 100%; text-align: center; margin: 0;"></div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-6">
+                        <br><br>
+                        <div id="del-prove">
+                            <h2 class="text-danger text-center"><small><i class="fa fa-trash-o"></i></small>&nbsp;&nbsp;Eliminar un proveedor</h2>
+                            <form action="process/delprove.php" method="post" role="form">
+                                <div class="form-group">
+                                    <label>Proveedores</label>
+                                    <select class="form-control" name="nit-prove">
+                                        <?php 
+                                            $proveNIT=mysqli_query($con,"SELECT * FROM proveedor order by NombreProveedor asc");
+                                            while($PN=mysqli_fetch_array($proveNIT)){
+                                                echo '<option value="'.$PN['idProveedor'].'">'.$PN['idProveedor'].' - '.$PN['NombreProveedor'].'</option>';
+                                            }
+                                        ?>
+                                    </select>
+                                </div>
+                                <p class="text-center"><button type="submit" class="btn btn-danger">Eliminar proveedor</button></p>
+                                <br>
+                                <div id="res-form-del-prove" style="width: 100%; text-align: center; margin: 0;"></div>
+                            </form>
+                        </div>    
+                    </div>
+                    <div class="col-xs-12">
+                        <br><br>
+                        <div class="panel panel-info">
+                            <div class="panel-heading text-center"><i class="fa fa-refresh fa-2x"></i><h3>Actualizar datos de proveedor</h3></div>
+                              <div class="table-responsive">
+                              <table class="table table-bordered">
+                                  <thead class="">
+                                      <tr>
+                                          <th class="text-center">ID</th>
+                                          <th class="text-center">Nombre</th>
+                                          <th class="text-center">RFC</th>
+                                          <th class="text-center">Dirección</th>
+                                          <th class="text-center">Telefono</th>
+                                          <th class="text-center">Correo</th>
+                                          <th class="text-center">Página web</th>
+                                          <th class="text-center">Opciones</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <?php
+                                              $proveedores=mysqli_query($con,"SELECT * FROM proveedor order by NombreProveedor asc");
+                                              $up=1;
+                                              while($prov=mysqli_fetch_array($proveedores)){
+                                                  echo '
+                                                      <div id="update-proveedor">
+                                                        <form method="post" action="process/updateProveedor.php" id="res-update-prove-'.$up.'">
+                                                          <tr>
+                                                              <td>
+                                                                <input class="form-control" name="id" required="" value="'.$prov['idProveedor'].'" readonly>
+                                                                </td>
+                                                              <td><input class="form-control" type="text" name="prove-name" required="" value="'.$prov['NombreProveedor'].'"></td>
+                                                              <td><input class="form-control" type="text-area" name="prove-rfc" required="" value="'.$prov['RFC'].'"></td>
+                                                              <td><input class="form-control" type="text-area" name="prove-dir" required="" value="'.$prov['Direccion'].'"></td>
+                                                              <td><input class="form-control" type="tel" name="prove-tel" required="" value="'.$prov['Telefono'].'"></td>
+                                                              <td><input class="form-control" type="text-area" name="prove-correo"  required="" value="'.$prov['correo'].'"></td>
+                                                              <td><input class="form-control" type="text-area" name="prove-web" required="" value="'.$prov['PaginaWeb'].'"></td>
+                                                              <td class="text-center">
+                                                                  <button type="submit" class="btn btn-sm btn-primary button-UP" value="res-update-prove-'.$up.'">Actualizar</button>
+                                                                  <div id="res-update-prove-'.$up.'" style="width: 100%; margin:0px; padding:0px;"></div>
+                                                              </td>
+                                                          </tr>
+                                                        </form>
+                                                      </div>
+                                                      ';
+                                                  $up=$up+1;
+                                              }
+                                            ?>
+                                  </tbody>
+                              </table>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <!--==============================Panel Marcas===============================-->
+                <div role="tabpanel" class="tab-pane fade" id="Categorias">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6">
+                            <br><br>
+                            <div id="add-categori">
+                                <h2 class="text-info text-center"><small><i class="fa fa-plus"></i></small>&nbsp;&nbsp;Agregar Marcas</h2>
+                                <form action="process/regcategori.php" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Código</label>
+                                        <input class="form-control" type="text" name="marca-code" placeholder="Código de Marca" maxlength="9" required="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nombre</label>
+                                        <input class="form-control" type="text" name="marca-name" placeholder="Nombre de Marca" maxlength="30" required="">
+                                    </div>
+                                    <p class="text-center"><button type="submit" class="btn btn-primary">Agregar Marca</button></p>
+                                    <br>
+                                    <div id="res-form-add-categori" style="width: 100%; text-align: center; margin: 0;"></div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-6">
+                            <br><br>
+                            <div id="del-categori">
+                                <h2 class="text-danger text-center"><small><i class="fa fa-trash-o"></i></small>&nbsp;&nbsp;Eliminar una Marca</h2>
+                                <form action="process/delcategori.php" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Marcas</label>
+                                        <select class="form-control" name="categ-code">
+
+                                            <?php 
+                                                $categoriav=  ejecutarSQL::consultar("SELECT * FROM marca where idMarca!=1 order by NombreMarca asc");
+                                                while($categv=mysqli_fetch_array($categoriav)){
+                                                    echo '<option value="'.$categv['idMarca'].'"">'.$categv['idMarca'].' - '.$categv['NombreMarca'].'</option>';
+                                                }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <p class="text-center"><button type="submit" class="btn btn-danger">Eliminar Marca</button></p>
+                                    <br>
+                                    <div id="res-form-del-cat" style="width: 100%; text-align: center; margin: 0;"></div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-xs-12">
+                            <br><br>
+                            <div class="panel panel-info">
+                                <div class="panel-heading text-center"><i class="fa fa-refresh fa-2x"></i><h3>Actualizar Marca</h3></div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="">
+                                            <tr>
+                                                <th class="text-center">ID</th>
+                                                <th class="text-center">Código Marca</th>
+                                                <th class="text-center">Nombre Marca</th>
+                                                <th class="text-center">Opciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                              $categorias=  ejecutarSQL::consultar("SELECT * FROM marca order by NombreMarca asc");
+                                              $ui=1;
+                                              while($cate=mysqli_fetch_array($categorias)){
+                                                  echo '
+                                                      <div id="update-category">
+                                                        <form method="post" action="process/updateCategory.php" id="res-update-category-'.$ui.'">
+                                                          <tr>
+                                                              <td>
+                                                                <input class="form-control" name="id" maxlength="9" required="" value="'.$cate['idMarca'].'" readonly>
+                                                             </td>
+                                                             <td><input class="form-control" type="text" name="marca-code" maxlength="9" required="" value="'.$cate['CodigoMarca'].'"></td>
+                                                              <td><input class="form-control" type="text" name="marca-name" maxlength="30" required="" value="'.$cate['NombreMarca'].'"></td>
+                                                             <td class="text-center">
+                                                                  <button type="submit" class="btn btn-sm btn-primary button-UC" value="res-update-category-'.$ui.'">Actualizar</button>
+                                                                  <div id="res-update-category-'.$ui.'" style="width: 100%; margin:0px; padding:0px;"></div>
+                                                              </td>
+                                                          </tr>
+                                                        </form>
+                                                      </div>
+                                                      ';
+                                                  $ui=$ui+1;
+                                              }
+                                            ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                              </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--==============================Panel Admins===============================-->
+                <div role="tabpanel" class="tab-pane fade" id="Admins">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6">
+                            <br><br>
+                            <div id="add-admin">
+                                <h2 class="text-info text-center"><small><i class="fa fa-plus"></i></small>&nbsp;&nbsp;Agregar Usuarios:</h2>
+                                <form action="process/regAdmin.php" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Nombre de usuario:</label>
+                                        <input class="form-control" type="text" name="admin-name" placeholder="Nombre" maxlength="21" required="">
+                                    </div>
+                                     <div class="form-group">
+                                        <label>Contraseña</label>
+                                        <input class="form-control" type="password" name="admin-pass" placeholder="Contraseña" required="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nombre:</label>
+                                        <input class="form-control" type="text" name="admin-nombre" placeholder="Nombre(s)" required="">
+                                    </div>
+                                     <div class="form-group">
+                                        <label>Apellido</label>
+                                        <input class="form-control" type="text" name="admin-apellido" placeholder="Apellidos" required="">
+                                    </div>
+                                     <div class="form-group">
+                                        <label>Direccion</label>
+                                        <input class="form-control" type="text" name="admin-direccion" placeholder="Direccion" required="">
+                                    </div>
+                                     <div class="form-group">
+                                        <label>Correo electronico:</label>
+                                        <input class="form-control" type="text" name="admin-telefono" placeholder="Correo electronico" required="">
+                                    </div>
+                                     <div class="form-group">
+                                        <label>Acceso:</label>
+                                      <?php
+                                        if($_SESSION['acceso']==1){
+                                        echo '<select class="form-control" type="text" name="admin-acceso" required="">
+                                        <option value="0">Seleccione tipo de usuario</option>
+                                        <option value="2">Administrador</option>
+                                        <option value="3">Vendedor</option>
+										 </select>';
+                                         
+                                      }else{
+                                        echo '<select class="form-control" type="text" name="admin-acceso" required="">
+                                        <option value="0">Seleccione tipo de usuario</option>
+                                        <option value="3">Vendedor</option>
+										 </select>';
+                                        
+                                      }
+                                        ?>
+                                       
+                                    </div>
+                                     <div class="form-group">
+                                      <label>Tipo de Sucursal:</label>
+                                      <select name="admin-tipo-suc" class="form-control" id="select-tipo-sucursal">
+                                        <option value="0">Seleccione tipo de sucursal:</option>
+                                        <option value="1">Matriz</option>
+                                        <option value="2">Sucursal</option>
+                                      </select> 
+                                     </div>
+                                      <div class="form-group">
+                                      <label>Ubicacion:</label>
+                                      <select name="admin-ubic" class="form-control" id="select-ubicacion">
+                                        <option value="0">Seleccione ubicacion:</option>
+                                        <?php 
+                                        $conubicaciones=mysqli_query($con,"SELECT*FROM ubicacion order by nombreUbicacion asc");
+                                        while ($conUbic=mysqli_fetch_array($conubicaciones)) {
+                                        echo "<option value='".$conUbic['idUbicacion']."'>".$conUbic['nombreUbicacion']."</option>";
+                                        }
+                                        ?>
+                                      </select> 
+                                     </div>
+                                     <div class="form-group">
+                                      <label>Sucursal:</label>
+                                      <select name="admin-suc" class="form-control" id="select-sucursales">
+                                        <option value="0">Seleccione sucursal:</option>
+
+                                      </select> 
+                                     </div>
+                                    <p class="text-center"><button type="submit" class="btn btn-primary">Agregar Usuario</button></p>
+                                    <br>
+                                    <div id="res-form-add-admin" style="width: 100%; text-align: center; margin: 0;"></div>
+                                </form>
+                            </div>
+                        </div>
+						<?php
+						if($_SESSION['acceso']==1){
+						?>
+                        <div class="col-xs-12 col-sm-6">
+                            <br><br>
+                            <div id="del-admin">
+                                <h2 class="text-danger text-center"><small><i class="fa fa-trash-o"></i></small>&nbsp;&nbsp;Eliminar usuarios</h2>
+                                <form action="process/deladmin.php" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Usuarios</label>
+                                        <select class="form-control" name="name-admin">
+                                            <?php 
+                                                $adminCon=  ejecutarSQL::consultar("select * from usuarios order by user asc");
+                                                while($AdminD=mysqli_fetch_array($adminCon)){
+                                                    echo '<option value="'.$AdminD['user'].'">'.$AdminD['user'].'</option>';
+                                                }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <p class="text-center"><button type="submit" class="btn btn-danger">Eliminar Usuario</button></p>
+                                    <br>
+                                    <div id="res-form-del-admin" style="width: 100%; text-align: center; margin: 0;"></div>
+                                </form>
+                            </div>
+                        </div>
+                       <?php 
+						}
+						?>
+                        <div class="col-xs-12">
+                        <?php
+                        if($_SESSION['acceso']==1){
+                        ?>
+                        <br><br>
+                        <div class="panel panel-info">
+                            <div class="panel-heading text-center"><i class="fa fa-refresh fa-2x"></i><h3>Actualizar datos de sucursal</h3></div>
+                              <div class="table-responsive">
+                              <table class="table table-bordered">
+                                  <thead class="">
+                                      <tr>
+                                          <th class="text-center">ID</th>
+                                          <th class="text-center">Usuario</th>
+                                          <th class="text-center">Nombre</th>
+                                          <th class="text-center">Apellidos</th>
+                                          <th class="text-center">Direccion</th>
+                                          <th class="text-center">Correo</th>
+                                          <th class="text-center">Sucursal</th>
+                                          <th class="text-center">Acceso</th>
+                                          <th class="text-center">Opciones</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <?php
+                                              $usu=mysqli_query($con,"SELECT * FROM usuarios INNER JOIN sucursal on sucursal.idSucursal=usuarios.idSucursal order by nombreSucursal asc");
+                                              $up=1;
+                                              while($usuarios=mysqli_fetch_array($usu)){
+
+                                                  echo '
+                                                      <div id="update-user">
+                                                        <form method="post" action="process/updateUser.php" id="res-update-user-'.$up.'">
+                                                          <tr>
+                                                              <td>
+                                                                <input class="form-control" name="id" required="" value="'.$usuarios['idUsuario'].'" readonly>
+                                                                </td>
+                                                              <td><input class="form-control" type="text" name="user-user" maxlength="30" required="" value="'.$usuarios['user'].'"></td>
+                                                              <td><input class="form-control" type="text-area" name="user-name" required="" value="'.$usuarios['Nombre'].'"></td>
+                                                              <td><input class="form-control" type="text-area" name="user-apellidos" required="" value="'.$usuarios['Apellido'].'"></td>
+                                                              <td><input class="form-control" type="text-area" name="user-dir" required="" value="'.$usuarios['Direccion'].'"></td>
+                                                              <td><input class="form-control" type="text-area" name="user-tel" required="" value="'.$usuarios['email'].'"></td>
+                                                              <td><select name="user-suc" class="form-control">';
+                                                              $sc=mysqli_query($con,"SELECT * FROM sucursal WHERE idSucursal=".$usuarios['idSucursal']." order by nombreSucursal asc");
+                                                              while($Suc=mysqli_fetch_array($sc)){
+                                                              echo "<option value='".$Suc['idSucursal']."'>".$Suc['nombreSucursal']."</option>";
+                                                              }
+                                                              $resSuc=mysqli_query($con,"SELECT * FROM sucursal WHERE idSucursal!=".$usuarios['idSucursal']." order by nombreSucursal asc");
+                                                               while($Sucl=mysqli_fetch_array($resSuc)){
+                                                                echo "<option value='".$Sucl['idSucursal']."'>".$Sucl['nombreSucursal']."</option>";
+                                                               }                  
+                                                              echo '</select></td>';
+                                                              $contipou=mysqli_query($con,"SELECT * FROM tipo_usuario WHERE idTipoU=".$usuarios['idTipoU']." order by descripcionUsuario asc");
+                                                              $tipou=mysqli_fetch_array($contipou);
+                                                              echo '<td>
+                                                              <input class="form-control" name="tipoUser" required="" value="'.$tipou['descripcionUsuario'].'" readonly>
+                                                              </td>';
+                                                              echo '<td class="text-center">
+                                                              <button type="submit" class="btn btn-sm btn-primary button-UUS" value="res-update-user-'.$up.'">Actualizar</button>
+                                                                  <div id="res-update-user-'.$up.'" style="width: 100%; margin:0px; padding:0px;"></div>
+                                                              </td>
+                                                              
+                                                          </tr>
+                                                        </form>
+                                                      </div>
+                                                      ';
+                                                  $up=$up+1;
+                                              }
+                                            ?>
+                                  </tbody>
+                              </table>
+                          </div>
+                          <?php
+                        }
+                          ?>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                 <!--==============================Panel Productos por Ajustes===============================-->
+        <div role="tabpanel" class="tab-pane fade" id="Ajustes">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6">    
+                            <br><br>
+                            <div id="suc-info">
+                            <h2 class="text-primary text-center"><small><i class="fa fa-refresh"></i></small>&nbsp;&nbsp;Datos</h2><br><br>
+                                <form action="process/updateInfoSuc.php" method="post" enctype="multipart/form-data" role="form">
+                                <?php
+                                 $inforSuc=ejecutarSQL::consultar("SELECT*FROM sucursal WHERE idSucursal=".$_SESSION['sucursal']);
+                                 $Sucur=mysqli_fetch_array($inforSuc);
+                                 echo '<input type="hidden" name="id" value="'.$Sucur['idSucursal'].'">';
+                                 echo '<div class="form-group">
+                                 <label>Nombre de Sucursal:</label>
+                                 <input class="form-control" type="text" name="name-suc" value="'.$Sucur['nombreSucursal'].'">
+                                 </div>';
+                                 echo '<div class="form-group">
+                                 <label>Dirección:</label>
+                                 <input class="form-control" name="dir-suc" type="text" value="'.$Sucur['direccion'].'">
+                                 </div>';
+                                 echo '<div class="form-group">
+                                 <label>Ubicación:</label>
+                                 <select class="form-control" name="ubic-suc">';
+                                 $consulUbic=ejecutarSQL::consultar("SELECT*FROM ubicacion WHERE idUbicacion=".$Sucur['idUbicacion']);
+                                 while( $ubica=mysqli_fetch_array($consulUbic)){
+                                 echo '<option value="'.$ubica['idUbicacion'].'">'.$ubica['nombreUbicacion'].'</option>';
+                                 }
+                                 $consulUbic=ejecutarSQL::consultar("SELECT*FROM ubicacion WHERE idUbicacion!=".$Sucur['idUbicacion']);
+                                 while( $ubica=mysqli_fetch_array($consulUbic)){
+                                 echo '<option value="'.$ubica['idUbicacion'].'">'.$ubica['nombreUbicacion'].'</option>';
+                                 }
+                                 echo '</select>
+                                 </div>';  
+                                 echo '<div class="form-group"><label>Logo de sucursal:</label></div>';                                
+                                 echo '<div class="form-group text-center" ><img src="assets/img/'.$Sucur['logo'].'" alt="Logo" width="100" height="100"></div>'; 
+                                 echo '<div class="form-group">                      
+                                 <input class="form-control" type="file" name="logo-suc">
+                                 </div>';
+                                ?>  
+                                
+                                    <p class="text-center"><button type="submit" class="btn btn-primary">Actualizar</button></p>
+                                    <br>
+                                    <div id="res-form-del-pedido" style="width: 100%; text-align: center; margin: 0;"></div>
+                                </form>
+                            </div> 
+                            <br><br>
+                           
+                        </div>
+                        <div class="col-xs-12 col-sm-6">    
+                            <br><br>
+                            <div id="suc-info">
+                            <h2 class="text-primary text-center"><small><i class="fa fa-refresh"></i></small>&nbsp;&nbsp;Perfil</h2><br><br>
+                            <form action="process/updatePerfil.php" method="post" enctype="multipart/form-data" role="form">
+                            <?php
+                             echo '<input type="hidden" name="id" value="'.$Sucur['idSucursal'].'">';
+                             echo '<div class="form-group">
+                             <label>Color de Menu:</label>
+                             <input class="form-control" type="color" name="color-suc" value="'.$Sucur['color'].'">
+                             </div>';
+                             echo '<div class="form-group"><label>Fondo de aplicacion:</label></div>';
+                             echo '<div class="form-group text-center" ><img src="assets/img/'.$Sucur['fondoSuc'].'" alt="Logo" width="200" height="200"></div>';
+                             echo '<div class="form-group">                      
+                             <input class="form-control" type="file" name="fondo-suc">
+                             </div>';
+                            ?><br>
+                             <p class="text-center"><button type="submit" class="btn btn-primary">Actualizar</button></p>
+                                </form>
+                    </div>
+                    </div>
+                        
+                    </div>
+                </div>
+                <!--==============================Panel Productos por Factura===============================-->
+                <div role="tabpanel" class="tab-pane fade" id="Pedidos">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6">
+                            
+                            <br><br>
+                            <div id="del-pedido">
+                            <h2 class="text-primary text-center"><small><i class="fa fa-plus"></i></small>&nbsp;&nbsp;Agregar productos por factura</h2><br><br>
+                                <form action="process/addCuentaPagar.php" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Tipo de Compra:</label>
+                                        <select  id="tipo-compra" name="tipo-compra" class="form-control" name="num-pedido">
+                                           <option value="N">Seleccione:</option>
+                                           <option value="nota">Nota</option>
+                                           <option value="facturas">Factura</option>
+                                        </select>
+                                    </div>
+                                     <div id="tipoCompra" class="form-group">
+                                       
+                                     </div>
+                                    <p class="text-center"><button type="submit" class="btn btn-primary">Aceptar</button>&nbsp;&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Cancelar</button></p>
+                                    <br>
+                                    <div id="res-form-del-pedido" style="width: 100%; text-align: center; margin: 0;"></div>
+                                </form>
+                            </div> 
+                            <br><br>
+                           
+                        </div>
+                        <div class="col-xs-12"></div>
+                    </div>
+                </div>
+    <!--==============================Panel Clientes===============================-->
+    <div role="tabpanel" class="tab-pane fade" id="Clientes">
+    <div class="row">
+    <div class="col-xs-12 col-sm-6">
+    <br><br>
+    <div id="add-cliente">
+    <h2 class="text-primary text-center"><small><i class="fa fa-plus"></i></small>&nbsp;&nbsp;Agregar Clientes</h2><br><br>
+        <form action="process/addCliente.php" method="post" role="form">
+        <div class="form-group">
+    <label>Nombre</label>
+    <input class="form-control" type="text" name="name-cliente" placeholder="Nombre del cliente" maxlength="30">
+    </div>
+    <div class="form-group">
+    <label>Apellidos</label>
+    <input class="form-control" type="text" name="apellido-cliente" placeholder="Apellidos del cliente" required="">
+    </div> 
+    <div class="form-group">
+    <label>RFC</label>
+    <input class="form-control" type="text" name="rfc-cliente" placeholder="RFC cliente" onkeyup="mayus(this);">
+    </div>                           
+    <div class="form-group">
+    <label>Calle:</label>
+    <input class="form-control" type="text" name="calle-cliente" placeholder="Dirección cliente" required="">
+    </div>
+    <div class="form-group">
+    <label>No. Exterior</label>
+    <input class="form-control" type="text" name="nexterior-cliente" placeholder="Dirección cliente" required="">
+    </div>
+    <div class="form-group">
+    <label>No Interior</label>
+    <input class="form-control" type="text" name="ninterior-cliente" placeholder="No. Interior" required="">
+    </div>
+    
+    <div class="form-group">
+    <label>Colonia</label>
+    <input class="form-control" type="text" name="colonia-cliente" placeholder="Colonia"  maxlength="50" required="">
+    </div>
+    <div class="form-group">
+    <label>Municipio:</label>
+    <input class="form-control" type="text" name="municipio-cliente" placeholder="Municipio" required="">
+    </div>
+    <div class="form-group">
+    <label>Estado:</label>
+    <select class="form-control" name="estado-cliente" required="">
+    <?php
+    $consultaEstado= ejecutarSQL::consultar("SELECT * FROM estado where ubicacionpaisid=42 order by estadonombre asc");
+    echo "<option value='N'>Seleccione estado:</option>";
+    while($estados=mysqli_fetch_array($consultaEstado)){
+    echo "<option value='".$estados['estadonombre']."'>".$estados['estadonombre']."</option>";
+    }    
+    ?>    
+    </select>
+    </div>
+	<div class="form-group">
+    <label>Codigo Postal</label>
+    <input class="form-control" type="text" name="cp-cliente" placeholder="Codigo Postal" required="">
+    </div>								
+    <div class="form-group">
+    <div class="form-group">
+    <label>Correo</label>
+    <input class="form-control" type="text" name="correo-cliente" placeholder="Correo electronico"  maxlength="50" required="">
+    </div>
+    <label>Teléfono</label>
+    <input class="form-control" type="text" name="tel-cliente" placeholder="Número telefónico" pattern="[0-9]{1,20}" maxlength="20" required="">
+    </div>   
+                                <p class="text-center"><button type="submit" class="btn btn-primary">Agregar Cliente</button></p>
+                                <br>
+                                
+                                <div id="res-form-add-cliente" style="width: 100%; text-align: center; margin: 0;"></div>
+                                </form>
+                            </div> 
+                           
+                                              
+                    </div>
+                    <div class="col-xs-12 col-sm-6">
+                        <br><br>
+                        <div id="del-cliente" style="border: 1px solid #e0e1e1 !important;border-radius: 4px;padding: 10px;">
+                       <h2 class="text-danger text-center"><small><i class="fa fa-trash-o"></i></small>&nbsp;&nbsp;Eliminar clientes</h2>
+                       <form action="process/delCliente.php" method="post" role="form">
+                       <div class="form-group">
+                          <label>Clientes:</label>
+                          <select class="form-control" name="nit-clien">
+                            <option value="0">Seleccione cliente:</option>
+                              <?php 
+                                   $ubicNIT=mysqli_query($con,"SELECT * FROM cliente order by NombreCompleto asc");
+                                   while($SN=mysqli_fetch_array($ubicNIT)){
+                                             echo '<option value="'.$SN['idCliente'].'">'.$SN['idCliente'].' - '.$SN['NombreCompleto']."-".$SN['RFC'].'</option>';
+                                   }
+                               ?>
+                           </select>
+                          </div>
+                           <p class="text-center"><button type="submit" class="btn btn-danger">Eliminar cliente</button></p>
+                           <br>
+                           <div id="res-form-del-cliente" style="width: 100%; text-align: center; margin: 0;"></div>
+                            </form>
+                        </div>    
+                    </div>    
+                    <div class="col-xs-12">
+                        <?php
+                        if($_SESSION['acceso']==1){
+                        ?>
+                        <br><br>
+                        <div class="panel panel-info">
+                            <div class="panel-heading text-center"><i class="fa fa-refresh fa-2x"></i><h3>Actualizar datos de cliente</h3></div>
+                              <div class="table-responsive">
+                              <table class="table table-bordered">
+                                  <thead class="">
+                                      <tr>
+                                          <th class="text-center">ID</th>
+                                          <th class="text-center">Nombre</th>
+                                          <th class="text-center">RFC</th>
+                                          <th class="text-center">Direccion</th>
+                                          <th class="text-center">Telefono</th>
+                                          <th class="text-center">Email</th>
+                                          <th class="text-center">Opciones</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <?php
+                                              $usu=mysqli_query($con,"SELECT * FROM cliente order by NombreCompleto asc");
+                                              $up=1;
+                                              while($usuarios=mysqli_fetch_array($usu)){
+
+                                                  echo '
+                                                      <div id="update-cliente">
+                                                        
+                                                          <tr>
+                                                              <td>
+                                                                <input class="form-control" name="id" required="" value="'.$usuarios['idCliente'].'" readonly>
+                                                                </td>
+                                                              <td><input class="form-control" type="text" name="user-user" maxlength="30" required="" value="'.$usuarios['NombreCompleto'].'" readonly></td>
+                                                              <td><input class="form-control" type="text-area" name="user-name" required="" value="'.$usuarios['RFC'].'" readonly></td>
+                                                              <td><input class="form-control" type="text-area" name="user-apellidos" required="" value="'.$usuarios['Calle']." ".$usuarios['noExterior']." ".$usuarios['noInterior']." ".$usuarios['colonia']." ".$usuarios['municipio']." ".$usuarios['estado'].'" readonly></td>
+                                                              <td><input class="form-control" type="text-area" name="user-dir" required="" value="'.$usuarios['Telefono'].'" readonly></td>
+                                                             <td><input class="form-control" type="text-area" name="user-tel" required="" value="'.$usuarios['Email'].'" readonly></td>
+                                                             <td class="text-center">
+                                                              <button class="btn btn-sm btn-warning"  data-toggle="modal" data-target="#editarClientePopup" data-whatever="'.$usuarios['idCliente'].'">Editar</button>
+                                                                  <div id="res-update-user-'.$up.'" style="width: 100%; margin:0px; padding:0px;"></div>
+                                                              </td>
+                                                              
+                                                          </tr>
+                                                        </div>';
+                                                  $up=$up+1;
+                                              }
+                                            ?>
+                                  </tbody>
+                              </table>
+                          </div>
+                          <?php
+                        }
+                          ?>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                 <!-- Modal editar clientes-->
+         <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="editarClientePopup">
+                               <div class="modal-dialog modal-sm">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Editar Clientes</h4>
+                                </div>
+                              
+                 
+                  <div class="popup"  id='contenidoModalClientes' style="padding: 5%;">          
+                  </div>
+                 
+                  </div>
+                 
+			    <div style="width: 100%; text-align: center; margin: 0;" id="editCliente"></div>
+              
+          </div>
+      </div>
+     <!-- Fin modal editar clientes -->
+        
+                      <!--==============================Panel Sucursales===============================-->
+                <div role="tabpanel" class="tab-pane fade" id="Sucursales">
+                    <div class="row">
+                    <div class="col-xs-12 col-sm-6">
+                        <br><br>
+                        <div id="add-sucursal" style="border: 1px solid #e0e1e1 !important;border-radius: 4px;padding: 10px;">
+                            <h2 class="text-primary text-center"><small><i class="fa fa-plus"></i></small>&nbsp;&nbsp;Agregar nueva sucursal</h2>
+                            <form action="process/regsuc.php" method="post" role="form">
+
+                                <div class="form-group">
+                                    <label>Nombre:</label>
+                                    <input class="form-control" type="text" name="suc-name" placeholder="Nombre sucursal" maxlength="30" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Dirección:</label>
+                                    <input class="form-control" type="text" name="suc-dir" placeholder="Direccion completa" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Ubicacion:</label>
+                                    <select name="suc-ubicacion" class="form-control">
+                                      <?php
+                                      $consutaUbic=mysqli_query($con,"SELECT*FROM ubicacion order by nombreUbicacion asc");
+                                      while($resubicaciones=mysqli_fetch_array($consutaUbic)){
+                                       echo "<option value='".$resubicaciones['idUbicacion']."'>".$resubicaciones['nombreUbicacion']."</option>"; 
+                                      }
+
+                                      ?>
+                                    </select>
+                                </div>
+                                <p class="text-center"><button type="submit" class="btn btn-primary">Agregar sucursal</button></p>
+                                <br>
+                                <div id="res-form-add-sucursal" style="width: 100%; text-align: center; margin: 0;"></div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-6">
+                        <br><br>
+                        <div id="del-sucursal" style="border: 1px solid #e0e1e1 !important;border-radius: 4px;padding: 10px;">
+                       <h2 class="text-danger text-center"><small><i class="fa fa-trash-o"></i></small>&nbsp;&nbsp;Eliminar una sucursal</h2>
+                       <form action="process/delsucursal.php" method="post" role="form">
+                       <div class="form-group">
+                          <label>Sucursales:</label>
+                          <select class="form-control" name="nit-suc">
+                            <option value="0">Seleccione sucursal:</option>
+                              <?php 
+                                   $ubicNIT=mysqli_query($con,"SELECT * FROM sucursal order by nombreSucursal asc");
+                                   while($SN=mysqli_fetch_array($ubicNIT)){
+                                             echo '<option value="'.$SN['idSucursal'].'">'.$SN['idSucursal'].' - '.$SN['nombreSucursal'].'</option>';
+                                   }
+                               ?>
+                           </select>
+                          </div>
+                           <p class="text-center"><button type="submit" class="btn btn-danger">Eliminar sucursal</button></p>
+                           <br>
+                           <div id="res-form-del-sucursal" style="width: 100%; text-align: center; margin: 0;"></div>
+                            </form>
+                        </div>    
+                    </div>
+                    <div class="col-xs-12">
+                        <br><br>
+                        <div class="panel panel-info">
+                            <div class="panel-heading text-center"><i class="fa fa-refresh fa-2x"></i><h3>Actualizar datos de sucursal</h3></div>
+                              <div class="table-responsive">
+                              <table class="table table-bordered">
+                                  <thead class="">
+                                      <tr>
+                                          <th class="text-center">ID</th>
+                                          <th class="text-center">Nombre</th>
+                                          <th class="text-center">Dirección</th>
+                                          <th class="text-center">Ubicacion</th>
+                                    
+                                          <th class="text-center">Opciones</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <?php
+                                              $suc=mysqli_query($con,"SELECT * FROM sucursal order by nombreSucursal asc");
+                                              $up=1;
+                                              while($sucursales=mysqli_fetch_array($suc)){
+
+                                                  echo '
+                                                      <div id="update-sucursal">
+                                                        <form method="post" action="process/updateSucursal.php" id="res-update-suc-'.$up.'">
+                                                          <tr>
+                                                              <td>
+                                                                <input class="form-control" name="id" required="" value="'.$sucursales['idSucursal'].'" readonly>
+                                                                </td>
+                                                              <td><input class="form-control" type="text" name="suc-name" maxlength="30" required="" value="'.$sucursales['nombreSucursal'].'"></td>
+                                                              <td><input class="form-control" type="text-area" name="suc-dir" required="" value="'.$sucursales['direccion'].'"></td>
+                                                              <td><select name="suc-ubic" class="form-control">';
+                                                              $ubc=mysqli_query($con,"SELECT * FROM ubicacion WHERE idUbicacion=".$sucursales['idUbicacion']);
+                                                              while($ubicacionSuc=mysqli_fetch_array($ubc)){
+                                                              echo "<option value='".$ubicacionSuc['idUbicacion']."'>".$ubicacionSuc['nombreUbicacion']."</option>";
+                                                              }
+                                                              $resUbicaciones=mysqli_query($con,"SELECT * FROM ubicacion WHERE idUbicacion!=".$sucursales['idUbicacion']);
+                                                               while($ubicacionesSuc=mysqli_fetch_array($resUbicaciones)){
+                                                                echo "<option value='".$ubicacionesSuc['idUbicacion']."'>".$ubicacionesSuc['nombreUbicacion']."</option>";
+                                                               }                  
+                                                              echo '</select></td>
+                             
+                                                              <td class="text-center">
+                                                              <button type="submit" class="btn btn-sm btn-primary button-US" value="res-update-suc-'.$up.'">Actualizar</button>
+                                                                  <div id="res-update-suc-'.$up.'" style="width: 100%; margin:0px; padding:0px;"></div>
+                                                              </td>
+                                                          </tr>
+                                                        </form>
+                                                      </div>
+                                                      ';
+                                                  $up=$up+1;
+                                              }
+                                            ?>
+                                  </tbody>
+                              </table>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <!--==============================Panel Ubicaciones===============================-->
+                <div role="tabpanel" class="tab-pane fade" id="Ubicaciones">
+                    <div class="row">
+                    <div class="col-xs-12 col-sm-6">
+                        <br><br>
+                        <div id="addUbicacion" style="border: 1px solid #e0e1e1 !important;border-radius: 4px;padding: 10px;">
+                            <h2 class="text-primary text-center"><small><i class="fa fa-plus"></i></small>&nbsp;&nbsp;Agregar nueva Ubicacion</h2>
+                            <form action="process/regubicacion.php" method="post" role="form">
+
+                                <div class="form-group">
+                                    <label>Nombre de ubicacion</label>
+                                    <input class="form-control" type="text" name="ub-name" placeholder="Nombre Ubicacion" maxlength="30" required="">
+                                </div>
+                                
+                                <p class="text-center"><button type="submit" class="btn btn-primary">Añadir Ubicacion</button></p>
+                                <br>
+                                <div id="res-form-add-ubicacion" style="width: 100%; text-align: center; margin: 0;"></div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-6">
+                        <br><br>
+                        <div id="delUbicacion" style="border: 1px solid #e0e1e1 !important;border-radius: 4px;padding: 10px;">
+                            <h2 class="text-danger text-center"><small><i class="fa fa-trash-o"></i></small>&nbsp;&nbsp;Eliminar ubicacion</h2>
+                            <form action="process/delubic.php" method="post" role="form">
+                                <div class="form-group">
+                                    <label>Ubicaciones</label>
+                                    <select class="form-control" name="nit-ubic">
+                                        <?php 
+                                            $ubicNIT=mysqli_query($con,"SELECT * FROM ubicacion order by nombreUbicacion asc");
+                                            while($UN=mysqli_fetch_array($ubicNIT)){
+                                                echo '<option value="'.$UN['idUbicacion'].'">'.$UN['idUbicacion'].' - '.$UN['nombreUbicacion'].'</option>';
+                                            }
+                                        ?>
+                                    </select>
+                                </div>
+                                <p class="text-center"><button type="submit" class="btn btn-danger">Eliminar ubicacion</button></p>
+                                <br>
+                                <div id="res-form-del-ubicacion" style="width: 100%; text-align: center; margin: 0;"></div>
+                            </form>
+                        </div>    
+                    </div>
+                    <div class="col-xs-12">
+                        <br><br>
+                        <div class="panel panel-info">
+                            <div class="panel-heading text-center"><i class="fa fa-refresh fa-2x"></i><h3>Actualizar datos de ubicacion</h3></div>
+                              <div class="table-responsive">
+                              <table class="table table-bordered">
+                                  <thead class="">
+                                      <tr>
+                                          <th class="text-center">ID</th>
+                                          <th class="text-center">Nombre</th>
+                                          <th class="text-center">Opciones</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <?php
+                                              $ubicaciones=mysqli_query($con,"SELECT * FROM ubicacion order by nombreUbicacion asc");
+                                              $up=1;
+                                              while($ubicacion=mysqli_fetch_array($ubicaciones)){
+                                                  echo '
+                                                      <div id="update-ubicacion">
+                                                        <form method="post" action="process/updateUbicacion.php" id="res-update-prove-'.$up.'">
+                                                          <tr>
+                                                              <td>
+                                                                <input class="form-control" name="id" required="" value="'.$ubicacion['idUbicacion'].'" readonly>
+                                                                </td>
+                                                              <td><input class="form-control" type="text" name="ubic-name" maxlength="70" required="" value="'.$ubicacion['nombreUbicacion'].'"></td>
+                                                              <td class="text-center">
+                                                                  <button type="submit" class="btn btn-sm btn-primary button-UU" value="res-update-prove-'.$up.'">Actualizar</button>
+                                                                  <div id="res-update-prove-'.$up.'" style="width: 100%; margin:0px; padding:0px;"></div>
+                                                              </td>
+                                                          </tr>
+                                                        </form>
+                                                      </div>
+                                                      ';
+                                                  $up=$up+1;
+                                              }
+                                            ?>
+                                  </tbody>
+                              </table>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                 <!--==============================Panel Precios===============================-->
+                <div role="tabpanel" class="tab-pane fade" id="Precios">
+                    <div class="row">                        
+                        <div class="col-xs-12" style="width: 80%;">
+                            <br><br>
+                            <div class="panel panel-info">
+                                <div class="panel-heading text-center"><i class="fa fa-refresh fa-2x"></i><h3>Actualizar Precios</h3></div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="">
+                                            <tr>
+                                                <th class="text-center">ID</th>
+                                                <th class="text-center">Descripcion</th>
+                                                <th class="text-center">Porcentaje de Ganancia:</th>
+                                                <th class="text-center">Opciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                              $precios=  ejecutarSQL::consultar("SELECT * FROM precios");
+                                              $ui=1;
+                                              while($prec=mysqli_fetch_array($precios)){
+                                                  echo '
+                                                      <div id="update-precios">
+                                                        <form method="post" action="process/updatePrecios.php" id="res-update-precios-'.$ui.'">
+                                                          <tr>
+                                                              <td>
+                                                                <input class="form-control" name="id" maxlength="9" required="" value="'.$prec['idPrecio'].'" readonly>
+                                                             </td>
+                                                             <td><input class="form-control" type="text" name="des-prec" maxlength="9" required="" value="'.$prec['descripcion'].'" readonly></td>
+                                                              <td><input class="form-control" type="text" name="por-prec" maxlength="30" required="" value="'.($prec['porcentaje']*100-100).'"></td>
+                                                             <td class="text-center">
+                                                                  <button type="submit" class="btn btn-sm btn-primary button-UPC" value="res-update-precios-'.$ui.'">Actualizar</button>
+                                                                  <div id="res-update-precios-'.$ui.'" style="width: 100%; margin:0px; padding:0px;"></div>
+                                                              </td>
+                                                          </tr>
+                                                        </form>
+                                                      </div>
+                                                      ';
+                                                  $ui=$ui+1;
+                                              }
+                                            ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                              </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Modal agregar nuevo cliente -->
+
+                              
+                               <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="clientePopup">
+                               <div class="modal-dialog modal-sm">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Agregar Nuevo Cliente</h4>
+                                </div>
+                              <form action="process/addCliente.php" method="post" role="form" style="margin: 20px;"  id="faddCliente">
+                 
+                  <div class="popup">
+                  <div class="form-group">
+                                    <label>Nombre</label>
+                                    <input class="form-control" type="text" name="name-cliente" placeholder="Nombre cliente" maxlength="30">
+                                </div>
+                                <div class="form-group">
+                                    <label>Apellido</label>
+                                    <input class="form-control" type="text" name="apellido-cliente" placeholder="Apellido cliente" required="">
+                                </div> 
+                                <div class="form-group">
+                                    <label>RFC</label>
+                                    <input class="form-control" type="text" name="rfc-cliente" placeholder="RFC cliente" onkeyup="mayus(this);">
+                                </div>                                
+                                
+                                <div class="form-group">
+                                    <label>Dirección</label>
+                                    <input class="form-control" type="text" name="dir-cliente" placeholder="Dirección cliente" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Correo</label>
+                                    <input class="form-control" type="text" name="correo-cliente" placeholder="Correo Electrónico"  maxlength="50" required="">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input class="form-control" type="number" name="tel-cliente" placeholder="Número telefónico" pattern="[0-9]{1,20}" maxlength="20" required="">
+                                </div>
+                                
+                  </div>                
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">Agregar Cliente</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addCliente"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal clientes -->
+        <!-- Modal productos -->
+
+                              
+                               <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" id="productosPopup">
+                               <div class="modal-dialog modal-md">
+                               <div class="modal-content" id="modal-form-login">
+                               <div class="modal-header">
+                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="btnClose">&times;</button>
+                               <h4 class="modal-title text-center text-primary" id="myModalLabel">Agregar nuevo producto</h4>
+                                </div>
+                              <form action="process/addProducto.php" method="post"  enctype="multipart/form-data" style="margin: 20px;" id="faddProducto">
+                 
+                  <div class="popup">
+					  <?php 
+								if($_SESSION['acceso']==1){  
+								?>
+								<br>
+								 <div class="form-group">
+								 <label>Sucursal de producto:</label>
+									 <select name="sucursal-prodM" id="sucursalProdM" class="form-control">
+									 <?php
+									  $proveedoresc=mysqli_query($con,"SELECT * FROM sucursal inner join ubicacion on sucursal.idUbicacion=ubicacion.idUbicacion where idSucursal=".$_SESSION['sucursal']);
+                                      while($provc=mysqli_fetch_array($proveedoresc)){
+                                      echo '<option value="'.$provc['idSucursal'].'">'.$provc['idSucursal']."-".$provc['nombreSucursal']."-".$provc['nombreUbicacion'].'</option>';
+                                        }
+									$proveedoresc=mysqli_query($con,"SELECT * FROM sucursal inner join ubicacion on sucursal.idUbicacion=ubicacion.idUbicacion where idSucursal!=".$_SESSION['sucursal']);
+                                      while($provc=mysqli_fetch_array($proveedoresc)){
+                                      echo '<option value="'.$provc['idSucursal'].'">'.$provc['idSucursal']."-".$provc['nombreSucursal']."-".$provc['nombreUbicacion'].'</option>';
+                                        }
+								      ?>
+									 </select>
+                              </div> 
+								<?php
+								}
+								?>    
+                  <div class="form-group">
+                                <label>Código de producto</label>
+                                <input type="text" class="form-control"  placeholder="Código" required  name="prod-codigo" id="codProdsM" onkeyup="verificarCodigoProductoM(this);">
+                              </div>
+                              <div id="verCodProdM"></div>
+                              <div class="form-group">
+                                <label>Nombre de producto</label>
+                                <input type="text" class="form-control"  placeholder="Nombre" required  name="prod-name">
+                              </div>
+                             
+                              <div class="form-group">
+                                <label>Codigo de SAT:</label>
+                                <input type="text" class="form-control"  placeholder="Codigo de SAT" required name="prod-sat">
+                              </div>
+                              <div class="form-group">
+                                <label>Descripción de producto</label>
+                                <textarea class="form-control"  placeholder="Descripción" required name="prod-des" rows="10" cols="40"></textarea>
+                              </div>
+                              <div class="form-group">
+                                <label>Proveedor</label>
+                                <select class="form-control" name="prod-prov" id="select-proveedores">
+                                    <?php 
+                                        $proveedoresc=mysqli_query($con,"SELECT * FROM proveedor order by NombreProveedor asc");
+                                        while($provc=mysqli_fetch_array($proveedoresc)){
+                                            echo '<option value="'.$provc['idProveedor'].'">'.$provc['NombreProveedor'].'</option>';
+                                        }
+                                    ?>
+                                </select>
+                              </div>
+
+                                <div class="form-group">
+                                <label>Marca del producto</label>
+                                <select class="form-control" name="prod-marca" id="select-marcas">
+                                
+                                    <?php 
+                                        $categoriac=mysqli_query($con,"SELECT * FROM marca order by NombreMarca asc");
+                                        while($catec=mysqli_fetch_array($categoriac)){
+                                            echo '<option value="'.$catec['idMarca'].'">'.$catec['NombreMarca'].'</option>';
+                                        }
+                                    ?>
+                                </select>
+                              </div>
+
+                              
+                               <div class="form-group">
+                                <label>Precio Compra</label>
+                                <input type="text" class="form-control"  name="prod-price" placeholder="Precio de Compra" required maxlength="20">                                
+                              </div>
+                              <div class="form-group">
+                                <label>Precio Venta</label>
+                                <input type="text" class="form-control"  name="prodv-price" placeholder="Precio de Venta" required maxlength="20">                                
+                              </div>
+                              <div class="form-group">
+                              <input type="checkbox" name="iva-prod" value="iva">&nbsp;&nbsp;Aplicar IVA
+                              </div>
+                              
+                              <div class="form-group">
+                                <label>Imagen de producto</label>
+                                <input type="file" name="imgM">
+                                <p class="help-block">Formato de imagenes admitido png, jpg, gif, jpeg</p>
+                              </div>
+                                <input type="hidden"  name="admin-name" value="<?php echo $_SESSION['nombreUser'] ?>">
+                  <div class="modal-footer">
+                    <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-sm">Agregar Producto</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Cancelar</button>
+                  </div>
+                  </div>
+                  <div class="" style="width: 100%; text-align: center; margin: 0;" id="addProducto"></div>
+              </form>
+          </div>
+      </div>
+    </div> <!-- Fin modal productos -->
+
+    <?php include './inc/footer.php'; ?>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+    "require": {
+        "mashape/unirest-php": "3.*",
+        "fabpot/goutte": "^3.2"
+    }
+}
